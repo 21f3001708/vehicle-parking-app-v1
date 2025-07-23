@@ -31,6 +31,7 @@ def setup_database():
             print("Admin user already exists.")
 
 # Commenting the below code as it is not necessary to check whether the db exists or not!
+# But if we require to check, the below code will work.
 # if __name__ == '__main__':
 #     if not os.path.exists(db_path):
 #         setup_database()
