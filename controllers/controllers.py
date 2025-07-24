@@ -176,6 +176,16 @@ def view_lot_spots(lot_id):
     spots = sorted(lot.spots, key=lambda x: x.spot_number)
     return render_template('view_spots.html', lot=lot, spots=spots)
 
+@app.route('/admin/all_reservations')
+@login_required
+@role_required('admin')
+def all_reservations():
+    all_completed = Reservation.query.filter(
+        Reservation.end_time.isnot(None)
+    ).order_by(Reservation.start_time.desc()).all()
+    
+    return render_template('all_reservations.html', reservations=all_completed)
+
 # User dashboard
 @app.route('/user/dashboard')
 @login_required
