@@ -2,16 +2,17 @@
 {% block title %}Login{% endblock %}
 {% block content %}
 <div class="form-container">
-    <h2>Login</h2>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <ul class=flashes>
+        <!-- <ul class=flashes> -->
         {% for message in messages %}
-          <li>{{ message }}</li>
+          <!-- <li>{{ message }}</li> -->
+           {{ message }}
         {% endfor %}
-        </ul>
+        <!-- </ul> -->
       {% endif %}
     {% endwith %}
+    <h2>Login</h2>
     <form method="POST" action="/login">
         <div class="form-group">
             <label for="username">Email / Username</label>

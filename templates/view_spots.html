@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Spots for {{ lot.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .spot-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1em;
+    }
+    .spot {
+        border: 1px solid #ccc;
+        padding: 1em;
+        text-align: center;
+        border-radius: 5px;
+    }
+    .spot-available {
+        background-color: #d4edda;
+    }
+    .spot-occupied {
+        background-color: #f8d7da;
+    }
+</style>
+
+<div style="max-width: 1200px; margin: auto; padding: 2em;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Viewing Spots for: {{ lot.name }}</h1>
+        <a href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+    </div>
+
+    <hr>
+
+    <div class="spot-grid">
+        {% for spot in spots %}
+            <div class="spot {% if spot.status == 'Available' %}spot-available{% else %}spot-occupied{% endif %}">
+                <strong>Spot #{{ spot.spot_number }}</strong>
+                <p>{{ spot.status }}</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

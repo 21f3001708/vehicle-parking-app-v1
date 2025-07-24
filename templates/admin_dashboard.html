@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: auto; padding: 2em;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Admin Dashboard</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert-{{ category }}" style="padding: 1em; margin-bottom: 1em; border-radius: 5px; background-color: #f8d7da;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+    
+    <p>Welcome, {{ current_user.full_name }}!</p>
+
+    <hr style="margin-top: 2em;">
+
+    <h2>Add New Parking Lot</h2>
+    <form method="POST" action="{{ url_for('add_lot') }}">
+        <div class="form-group">
+            <label for="name">Lot Name / Location</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="capacity">Total Capacity (Number of Spots)</label>
+            <input type="number" id="capacity" name="capacity" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="price">Price per Hour ($)</label>
+            <input type="number" id="price" name="price" step="0.01" min="0" required>
+        </div>
+        <button type="submit">Add Lot</button>
+    </form>
+
+    <hr style="margin-top: 2em;">
+
+    <h2>Existing Parking Lots</h2>
+    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 1em;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Capacity</th>
+                <th>Price/Hour</th>
+                <th>Spots Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if lots %}
+                {% for lot in lots %}
+                <tr>
+                    <td>{{ lot.id }}</td>
+                    <td>{{ lot.name }}</td>
+                    <td>{{ lot.capacity }}</td>
+                    <td>${{ "%.2f"|format(lot.price_per_hour) }}</td>
+                    <td>{{ lot.spots|length }}</td> <td>
+                        <a href="{{ url_for('edit_lot', lot_id=lot.id) }}">
+                            <button type="button">Edit</button>
+                        </a>
+                        <form method="POST" action="{{ url_for('delete_lot', lot_id=lot.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete {{ lot.name }} lot and all its {{lot.spots|length}} spots?');">
+                            <button type="submit">Delete</button>
+                        </form>
+                        <a href="{{ url_for('view_lot_spots', lot_id=lot.id) }}">
+                            <button type="button">View Spots</button>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center;">No lots have been created yet.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <hr style="margin-top: 2em;">
+
+    <h2>Registered Users</h2>
+    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 1em;">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Full Name</th>
+                <th>Email / Username</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if users %}
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.full_name }}</td>
+                    <td>{{ user.username }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="3" style="text-align: center;">No users have registered yet.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

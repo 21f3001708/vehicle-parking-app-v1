@@ -40,6 +40,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        flash(f"Your account has been created! Please login to move forward.")
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -70,13 +71,110 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# Dashboards
+# Admin dashboard
 @app.route('/admin/dashboard')
 @login_required
 @role_required('admin')
 def admin_dashboard():
-    return "<h1>Welcome to the Admin Dashboard!</h1><a href='/logout'>Logout</a>"
+    lots = ParkingLot.query.order_by(ParkingLot.id).all()
+    users = User.query.filter_by(role='user').all()
+    return render_template('admin_dashboard.html', lots=lots, users=users)
 
+@app.route('/admin/add_lot', methods=['POST'])
+@login_required
+@role_required('admin')
+def add_lot():
+    name = request.form.get('name')
+    capacity = int(request.form.get('capacity'))
+    price = float(request.form.get('price'))
+
+    new_lot = ParkingLot(name=name, capacity=capacity, price_per_hour=price)
+    db.session.add(new_lot)
+
+    spots_for_lot = []
+    for i in range(1, capacity + 1):
+        spot = ParkingSpot(spot_number=i)
+        spots_for_lot.append(spot)
+    
+    new_lot.spots = spots_for_lot
+    
+    db.session.commit()
+    
+    flash(f"Parking lot '{name}' and its {capacity} spots have been created successfully!")
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/delete_lot/<int:lot_id>', methods=['POST'])
+@login_required
+@role_required('admin')
+def delete_lot(lot_id):
+    lot_to_delete = ParkingLot.query.get_or_404(lot_id)
+
+    # Checking if any spot in the lot is occupied
+    can_delete = True
+    for spot in lot_to_delete.spots:
+        if spot.status != 'Available':
+            can_delete = False
+            break
+
+    if can_delete:
+        # If all spots are available in lot, we can delete it!
+        db.session.delete(lot_to_delete)
+        db.session.commit()
+        flash(f"Parking lot '{lot_to_delete.name}' and all its spots have been successfully deleted.", 'success')
+    else:
+        flash(f"Cannot delete lot '{lot_to_delete.name}' because it has occupied spots.", 'error')
+
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/edit_lot/<int:lot_id>', methods=['GET', 'POST'])
+@login_required
+@role_required('admin')
+def edit_lot(lot_id):
+    lot = ParkingLot.query.get_or_404(lot_id)
+
+    if request.method == 'POST':
+        lot.name = request.form.get('name')
+        lot.price_per_hour = float(request.form.get('price'))
+        new_capacity = int(request.form.get('capacity'))
+        
+        current_capacity = lot.capacity
+        if new_capacity > current_capacity:
+            for i in range(current_capacity + 1, new_capacity + 1):
+                new_spot = ParkingSpot(spot_number=i, lot_id=lot.id)
+                db.session.add(new_spot)
+            flash(f"{new_capacity - current_capacity} new spots added.", 'success')
+        
+        elif new_capacity < current_capacity:
+            num_to_remove = current_capacity - new_capacity
+            spots_to_check = ParkingSpot.query.filter_by(lot_id=lot.id).order_by(ParkingSpot.spot_number.desc()).limit(num_to_remove).all()
+            
+            can_decrease = all(spot.status == 'Available' for spot in spots_to_check)
+            print('can decrease',can_decrease)
+
+            if can_decrease:
+                for spot in spots_to_check:
+                    db.session.delete(spot)
+                flash(f"{num_to_remove} spots removed.", 'success')
+            else:
+                flash("Cannot decrease capacity: one or more spots to be removed are currently occupied.", 'error')
+                return redirect(url_for('edit_lot', lot_id=lot.id))
+
+        lot.capacity = new_capacity
+        db.session.commit()
+        flash(f"Lot '{lot.name}' has been updated successfully!", 'success')
+        return redirect(url_for('admin_dashboard'))
+
+    return render_template('edit_lot.html', lot=lot)
+
+@app.route('/admin/lot/<int:lot_id>/spots')
+@login_required
+@role_required('admin')
+def view_lot_spots(lot_id):
+    lot = ParkingLot.query.get_or_404(lot_id)
+    spots = sorted(lot.spots, key=lambda x: x.spot_number)
+    return render_template('view_spots.html', lot=lot, spots=spots)
+
+# User dashboard
 @app.route('/user/dashboard')
 @login_required
 @role_required('user')
