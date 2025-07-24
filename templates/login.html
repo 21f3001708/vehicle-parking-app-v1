@@ -2,14 +2,13 @@
 {% block title %}Login{% endblock %}
 {% block content %}
 <div class="form-container">
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <!-- <ul class=flashes> -->
-        {% for message in messages %}
-          <!-- <li>{{ message }}</li> -->
-           {{ message }}
+        {% for category, message in messages %}
+          <div class="alert-{{ category }}" style="padding: 1em; margin-bottom: 1em; border-radius: 5px; background-color: #d4edda;">
+            {{ message }}
+          </div>
         {% endfor %}
-        <!-- </ul> -->
       {% endif %}
     {% endwith %}
     <h2>Login</h2>

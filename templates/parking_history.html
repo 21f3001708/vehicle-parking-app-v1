@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Parking History{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: auto; padding: 2em;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Your Parking History</h1>
+        <a href="{{ url_for('user_dashboard') }}">Back to Dashboard</a>
+    </div>
+
+    <hr>
+
+    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 1em;">
+        <thead>
+            <tr>
+                <th>Lot Name</th>
+                <th>Spot #</th>
+                <th>Parked Time</th>
+                <th>Left Time</th>
+                </tr>
+        </thead>
+        <tbody>
+            {% if reservations %}
+                {% for res in reservations %}
+                <tr>
+                    <td>{{ res.spot.lot.name }}</td>
+                    <td>{{ res.spot.spot_number }}</td>
+                    <td>{{ res.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ res.end_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center;">You have no past parking records.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

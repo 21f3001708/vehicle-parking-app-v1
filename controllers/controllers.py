@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from datetime import datetime
 
 from app import app
 from database import db
@@ -40,7 +41,7 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        flash(f"Your account has been created! Please login to move forward.")
+        flash(f"Your account has been created! Please login to move forward.", 'success')
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -179,7 +180,71 @@ def view_lot_spots(lot_id):
 @login_required
 @role_required('user')
 def user_dashboard():
-    return f"<h1>Welcome to your Dashboard, {current_user.full_name}!</h1><a href='/logout'>Logout</a>"
+    active_reservation = Reservation.query.filter_by(user_id=current_user.id, end_time=None).first()
+
+    if active_reservation:
+        return render_template('user_dashboard.html', active_reservation=active_reservation)
+    else:
+        lots = ParkingLot.query.order_by(ParkingLot.id).all()
+        return render_template('user_dashboard.html', lots=lots)
+
+@app.route('/user/book_spot', methods=['POST'])
+@login_required
+@role_required('user')
+def book_spot():
+    lot_id = request.form.get('lot_id')
+    available_spot = ParkingSpot.query.filter_by(lot_id=lot_id, status='Available').first()
+    
+    if available_spot:
+        available_spot.status = 'Occupied'
+        
+        new_reservation = Reservation(
+            user_id=current_user.id,
+            spot_id=available_spot.id,
+            start_time=datetime.now()
+        )
+        db.session.add(new_reservation)
+        
+        db.session.commit()
+        
+        lot = ParkingLot.query.get(lot_id)
+        flash(f"Success! You have been assigned Spot #{available_spot.spot_number} in {lot.name}.", 'success')
+    else:
+        flash("Sorry, this parking lot is currently full. Please try another one.", 'error')
+        
+    return redirect(url_for('user_dashboard'))
+
+@app.route('/user/release_spot', methods=['POST'])
+@login_required
+@role_required('user')
+def release_spot():
+    reservation_id = request.form.get('reservation_id')
+    reservation = Reservation.query.get_or_404(reservation_id)
+    
+    if reservation.user_id != current_user.id:
+        flash("You do not have permission to perform this action.", 'error')
+        return redirect(url_for('user_dashboard'))
+
+    reservation.end_time = datetime.now()
+    
+    spot = ParkingSpot.query.get(reservation.spot_id)
+    spot.status = 'Available'
+    
+    db.session.commit()
+    
+    flash("You have successfully released your spot. Thank you!", 'success')
+    return redirect(url_for('user_dashboard'))
+
+@app.route('/user/history')
+@login_required
+@role_required('user')
+def parking_history():
+    completed_reservations = Reservation.query.filter(
+        Reservation.user_id == current_user.id,
+        Reservation.end_time.isnot(None)
+    ).order_by(Reservation.start_time.desc()).all()
+    
+    return render_template('parking_history.html', reservations=completed_reservations)
 
 if __name__ == '__main__':
     app.run(debug=True)
