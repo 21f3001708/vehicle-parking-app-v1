@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import datetime
+import math
 
 from app import app
 from database import db
@@ -227,12 +228,21 @@ def release_spot():
 
     reservation.end_time = datetime.now()
     
+    duration_seconds = (reservation.end_time - reservation.start_time).total_seconds()
+    duration_hours = duration_seconds / 3600
+
+    price_per_hour = reservation.spot.lot.price_per_hour
+
+    # Charging for a min. of one hour if parked for <1hr
+    cost = math.ceil(duration_hours) * price_per_hour
+    reservation.cost = round(cost, 2)
+    
     spot = ParkingSpot.query.get(reservation.spot_id)
     spot.status = 'Available'
     
     db.session.commit()
     
-    flash("You have successfully released your spot. Thank you!", 'success')
+    flash(f"You have successfully released your spot. Total cost: ${reservation.cost:.2f}", 'success')
     return redirect(url_for('user_dashboard'))
 
 @app.route('/user/history')

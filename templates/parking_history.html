@@ -17,16 +17,25 @@
                 <th>Spot #</th>
                 <th>Parked Time</th>
                 <th>Left Time</th>
+                <th>Duration</th>
+                <th>Cost</th>
                 </tr>
         </thead>
         <tbody>
             {% if reservations %}
                 {% for res in reservations %}
+                {% set duration = res.end_time - res.start_time %}
                 <tr>
                     <td>{{ res.spot.lot.name }}</td>
                     <td>{{ res.spot.spot_number }}</td>
                     <td>{{ res.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>{{ res.end_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                    {% set hours = (duration.total_seconds() / 3600)|int %}
+                    {% set minutes = ((duration.total_seconds() % 3600) / 60)|int %}
+                    {{ hours }}h {{ minutes }}m
+                    </td>
+                    <td>${{ "%.2f"|format(res.cost) }}</td>
                 </tr>
                 {% endfor %}
             {% else %}
