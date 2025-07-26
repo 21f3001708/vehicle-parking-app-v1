@@ -6,7 +6,7 @@ from datetime import datetime
 import math
 
 from app import app
-from database import db
+from models.database import db
 from models.models import User, ParkingLot, ParkingSpot, Reservation
 
 def role_required(role):

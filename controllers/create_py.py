@@ -1,7 +1,7 @@
 import os
 from werkzeug.security import generate_password_hash
 from app import app
-from database import db
+from models.database import db
 from models.models import User
 
 db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'parking.db')
