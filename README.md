@@ -36,20 +36,19 @@ Follow these steps to run the application on your local machine.
 
 ### 2. Clone the Repository
 ```bash
-git clone <your-repository-url>
-cd vehicle-parking-app
+git clone https://github.com/21f3001708/vehicle-parking-app-v1
+cd vehicle-parking-app-v1
 ```
 
 ### 3. Create a Virtual Environment
-It is highly recommended to use a virtual environment.
 
-**On Windows:**
+**For Windows:**
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
-**On macOS/Linux:**
+**For macOS/Linux:**
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -64,7 +63,7 @@ pip install -r requirements.txt
 ### 5. Initialize the Database
 Run the database creation script. This will create the `parking.db` file and add the predefined admin user.
 ```bash
-python create_db.py
+python create_py.py
 ```
 **Admin Credentials:**
 -   **Username:** `admin`
